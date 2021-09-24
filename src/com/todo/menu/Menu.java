@@ -10,8 +10,12 @@ public class Menu {
         System.out.println("4. ls -> List all items");
         System.out.println("5. ls_name_asc -> show list by ascending order of title");
         System.out.println("6. ls_name_desc -> show list by decsending order of title");
-        System.out.println("7. ls_date -> show list by date");
-        System.out.println("8. exit -> exit program");
+        System.out.println("7. ls_date -> show list by ascending order of date");
+        System.out.println("8. ls_date_desc -> show list by decsending order of date");
+        System.out.println("9. ls_cate -> show all categories from the items");
+        System.out.println("10. find -> find an item containing this word from title or description");
+        System.out.println("11. find_cate -> find an item containing this word from category");
+        System.out.println("12. exit -> exit program");
     }
     
 	public static void prompt() 

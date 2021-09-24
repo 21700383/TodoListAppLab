@@ -53,6 +53,26 @@ public class TodoMain {
 				l.sortByDate();
 				isList = true;
 				break;
+			
+			case "ls_date_desc":
+				l.sortByDate();
+				l.reverseList();
+				isList = true;
+				break;
+				
+			case "ls_cate":
+				TodoUtil.listCate(l);
+				break;
+			
+			case "find":
+				String keyword = sc.next();
+				TodoUtil.find(keyword, l);
+				break;
+			
+			case "find_cate":
+				String cate = sc.next();
+				TodoUtil.find_cate(cate, l);
+				break;
 				
 			case "help":
 				Menu.displaymenu();

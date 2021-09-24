@@ -15,23 +15,31 @@ public class TodoUtil {
 	
 	public static void createItem(TodoList list) {
 		
-		String title, desc;
+		String title, category, desc, due_date;
 		Scanner sc = new Scanner(System.in);
 		
 		System.out.print("Create Item\n"
 				+ "Title: ");
 		
-		title = sc.nextLine();
+		title = sc.nextLine().trim();
 		if (list.isDuplicate(title)) {
 			System.out.printf("Title can't be duplicate");
 			return;
 		}
 		
-		System.out.print("Description: ");
-		desc = sc.nextLine();
+		System.out.print("Category: ");
+		category = sc.next();
+		sc.nextLine();
 		
-		TodoItem t = new TodoItem(title, desc);
+		System.out.print("Description: ");
+		desc = sc.nextLine().trim();
+		
+		System.out.print("Due_date(yyyy/mm/dd): ");
+		due_date = sc.next();
+		
+		TodoItem t = new TodoItem(title, category, desc, due_date);
 		list.addItem(t);
+		System.out.println("Item added");
 	}
 
 	public static void deleteItem(TodoList l) {
@@ -39,14 +47,20 @@ public class TodoUtil {
 		Scanner sc = new Scanner(System.in);
 		
 		System.out.print("Delete Item\n"
-				+ "Item to remove: ");
-		String title = sc.next();
+				+ "Enter item number to remove: ");
+		int item_num = sc.nextInt();
 		
-		for (TodoItem item : l.getList()) {
-			if (title.equals(item.getTitle())) {
-				l.deleteItem(item);
-				break;
-			}
+		TodoItem item = l.getItem(item_num);
+		list(item_num, item);
+		
+		System.out.print("Do you wish to delete this item? (y/n) > ");
+		char yes_no = (char) sc.next().charAt(0);
+		if (yes_no == 'y') {
+			l.deleteItem(item);
+			System.out.println("Item deleted");
+		}
+		else {
+			System.out.println("Item not deleted");
 		}
 	}
 
@@ -64,54 +78,117 @@ public class TodoUtil {
 		}
 
 		System.out.print("New title: ");
-		String new_title = sc.nextLine();
+		String new_title = sc.next();
 		if (l.isDuplicate(new_title)) {
 			System.out.println("Title can't be duplicate");
 			return;
 		}
 		
+		System.out.print("New category: ");
+		String new_category = sc.next();
+		
 		System.out.print("New description: ");
-		String new_description = sc.nextLine();
+		String new_description = sc.nextLine().trim();
+		
+		System.out.print("New due date(yyyy/mm/dd): ");
+		String new_due_date = sc.next();
+		
 		for (TodoItem item : l.getList()) {
 			if (item.getTitle().equals(title)) {
 				l.deleteItem(item);
-				TodoItem t = new TodoItem(new_title, new_description);
+				TodoItem t = new TodoItem(new_title, new_category, new_description, new_due_date);
 				l.addItem(t);
 				System.out.println("Item updated");
 			}
 		}
 
 	}
-
+	
+	public static void find(String keyword, TodoList l) {
+		int count = 0;
+		for (TodoItem item: l.getList()) {
+			String title = item.getTitle();
+			String desc = item.getDesc();
+			if(title.contains(keyword) == true || desc.contains(keyword) == true) {
+				int current_num = l.indexOf(item) + 1;
+				list(current_num, item);
+				count++;
+			}
+		}
+		System.out.println("Found total of " + count + " items matching");
+	}
+	
+	public static void find_cate(String keyword, TodoList l) {
+		int count = 0;
+		for (TodoItem item: l.getList()) {
+			String category = item.getCategory();
+			if(category.contains(keyword) == true) {
+				int current_num = l.indexOf(item) + 1;
+				list(current_num, item);
+				count++;
+			}
+		}
+		System.out.println("Found total of " + count + " items matching");
+	}
+	
 	public static void listAll(TodoList l) {
-		System.out.println("<Items List>");
+		int total_num = l.getSize();
+		System.out.println("<Total List, total " + total_num + ">");
 		for (TodoItem item : l.getList()) {
-			System.out.println("[" + item.getTitle() + "] " + item.getDesc() + " -Time: " + item.getCurrent_date());
+			int current_num = l.indexOf(item) + 1;
+			list(current_num, item);
 		}
 	}
 	
-	public static void loadList(TodoList l, String string){
+	public static void list(int current_num, TodoItem item) {
+		System.out.println(current_num + ". [" + item.getCategory() + "] " + item.getTitle() + " - " 
+				+ item.getDesc() + " -" + item.getDue_date() + " -Time written: " + item.getCurrent_date());
+	}
+	
+	public static void listCate(TodoList l) {
+		HashSet<String> set = new HashSet();
+		for (TodoItem item : l.getList()) {
+			String category = item.getCategory();
+			set.add(category);
+		}
+		
+		Iterator iter = set.iterator();
+		int count = 0;
+		while(iter.hasNext()) {
+		    System.out.print(iter.next());
+		    if (iter.hasNext() == true) {
+		    	System.out.print("/ ");
+		    }
+		    count++;
+		}
+		
+		System.out.println("\nFound total of " + count + " categories");
+	}
+	
+	public static void loadList(TodoList l, String string) {
 		// TODO Auto-generated method stub
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(string));
 			
 			String inputline;
-			int i = 0;
+			int count = 0;
 			while((inputline = br.readLine()) != null) {
 				StringTokenizer st = new StringTokenizer(inputline, "##");
 				String title = st.nextToken();
+				String category = st.nextToken();
 				String desc = st.nextToken();
+				String due_date = st.nextToken();
 				String current_date = st.nextToken();
 			
-				TodoItem t = new TodoItem(title, desc);
+				TodoItem t = new TodoItem(title, category, desc, due_date);
 				t.setCurrent_date(current_date);
 				l.addItem(t);
-				i = i + 1;
+				count = count + 1;
 			}
 			
 			
 			br.close();
-			System.out.println("Read " + i + " columns from the file\n");
+			System.out.println("Read " + count + " items from the file\n");
 			
 		} catch (FileNotFoundException e) {
 			System.out.println(string +" does not exist");

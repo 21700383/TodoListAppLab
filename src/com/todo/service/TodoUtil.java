@@ -70,13 +70,13 @@ public class TodoUtil {
 		Scanner sc = new Scanner(System.in);
 		
 		System.out.print("Edit Item\n"
-				+ "Title of the item to update: ");
-		String title = sc.nextLine();
-		if (!l.isDuplicate(title)) {
-			System.out.println("Title doesn't exist");
-			return;
-		}
+				+ "Enter item number to edit: ");
+		int item_num = sc.nextInt();
+		
 
+		TodoItem item = l.getItem(item_num);
+		list(item_num, item);
+		
 		System.out.print("New title: ");
 		String new_title = sc.next();
 		if (l.isDuplicate(new_title)) {
@@ -86,22 +86,18 @@ public class TodoUtil {
 		
 		System.out.print("New category: ");
 		String new_category = sc.next();
+		sc.nextLine();
 		
 		System.out.print("New description: ");
 		String new_description = sc.nextLine().trim();
 		
 		System.out.print("New due date(yyyy/mm/dd): ");
 		String new_due_date = sc.next();
+		l.deleteItem(item);
+		TodoItem t = new TodoItem(new_title, new_category, new_description, new_due_date);
+		l.addItem(t);
+		System.out.println("Item updated");
 		
-		for (TodoItem item : l.getList()) {
-			if (item.getTitle().equals(title)) {
-				l.deleteItem(item);
-				TodoItem t = new TodoItem(new_title, new_category, new_description, new_due_date);
-				l.addItem(t);
-				System.out.println("Item updated");
-			}
-		}
-
 	}
 	
 	public static void find(String keyword, TodoList l) {
@@ -157,7 +153,7 @@ public class TodoUtil {
 		while(iter.hasNext()) {
 		    System.out.print(iter.next());
 		    if (iter.hasNext() == true) {
-		    	System.out.print("/ ");
+		    	System.out.print(" / ");
 		    }
 		    count++;
 		}

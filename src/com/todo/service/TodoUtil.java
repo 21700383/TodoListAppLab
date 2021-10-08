@@ -1,8 +1,5 @@
 package com.todo.service;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -13,16 +10,17 @@ import com.todo.dao.TodoList;
 
 public class TodoUtil {
 	
-	public static void createItem(TodoList list) {
+	public static void createItem(TodoList l) {
 		
 		String title, category, desc, due_date;
+		int is_completed;
 		Scanner sc = new Scanner(System.in);
 		
 		System.out.print("Create Item\n"
 				+ "Title: ");
 		
 		title = sc.nextLine().trim();
-		if (list.isDuplicate(title)) {
+		if (l.isDuplicate(title)) {
 			System.out.printf("Title can't be duplicate");
 			return;
 		}
@@ -37,9 +35,9 @@ public class TodoUtil {
 		System.out.print("Due_date(yyyy/mm/dd): ");
 		due_date = sc.next();
 		
-		TodoItem t = new TodoItem(title, category, desc, due_date);
-		list.addItem(t);
-		System.out.println("Item added");
+		is_completed = 0;
+		TodoItem t = new TodoItem(title, category, desc, due_date, is_completed);
+		if(l.addItem(t) > 0) System.out.println("Item added");
 	}
 
 	public static void deleteItem(TodoList l) {
@@ -48,152 +46,93 @@ public class TodoUtil {
 		
 		System.out.print("Delete Item\n"
 				+ "Enter item number to remove: ");
-		int item_num = sc.nextInt();
-		
-		TodoItem item = l.getItem(item_num);
-		list(item_num, item);
-		
-		System.out.print("Do you wish to delete this item? (y/n) > ");
-		char yes_no = (char) sc.next().charAt(0);
-		if (yes_no == 'y') {
-			l.deleteItem(item);
+		int index = sc.nextInt();
+		if (l.deleteItem(index)>0) 
 			System.out.println("Item deleted");
-		}
-		else {
-			System.out.println("Item not deleted");
-		}
 	}
 
 
 	public static void updateItem(TodoList l) {
 		
 		Scanner sc = new Scanner(System.in);
-		
+		String new_title, new_desc, new_category, new_due_date;
+		int is_completed;
 		System.out.print("Edit Item\n"
 				+ "Enter item number to edit: ");
-		int item_num = sc.nextInt();
-		
-
-		TodoItem item = l.getItem(item_num);
-		list(item_num, item);
+		int index = sc.nextInt();
 		
 		System.out.print("New title: ");
-		String new_title = sc.next();
+		new_title = sc.next().trim();
 		if (l.isDuplicate(new_title)) {
-			System.out.println("Title can't be duplicate");
+			System.out.printf("Title can't be duplicate");
 			return;
 		}
 		
 		System.out.print("New category: ");
-		String new_category = sc.next();
+		new_category = sc.next();
 		sc.nextLine();
 		
 		System.out.print("New description: ");
-		String new_description = sc.nextLine().trim();
+		new_desc = sc.nextLine().trim();
 		
 		System.out.print("New due date(yyyy/mm/dd): ");
-		String new_due_date = sc.next();
-		l.deleteItem(item);
-		TodoItem t = new TodoItem(new_title, new_category, new_description, new_due_date);
-		l.addItem(t);
-		System.out.println("Item updated");
-		
+		new_due_date = sc.nextLine().trim();
+		is_completed = 0; // assume editing task sets completed status to 0, as it's different now
+		TodoItem t = new TodoItem(new_title, new_category, new_desc, new_due_date, is_completed);
+		t.setId(index);
+		if(l.updateItem(t) > 0)
+			System.out.println("Item updated");
 	}
 	
-	public static void find(String keyword, TodoList l) {
+	public static void findList(TodoList l, String keyword) {
 		int count = 0;
-		for (TodoItem item: l.getList()) {
-			String title = item.getTitle();
-			String desc = item.getDesc();
-			if(title.contains(keyword) == true || desc.contains(keyword) == true) {
-				int current_num = l.indexOf(item) + 1;
-				list(current_num, item);
-				count++;
-			}
+		for (TodoItem item: l.getList(keyword)) {
+			System.out.println(item.toString());
+			count++;
 		}
 		System.out.println("Found total of " + count + " items matching");
 	}
 	
-	public static void find_cate(String keyword, TodoList l) {
+	public static void findCateList(TodoList l, String cate) {
 		int count = 0;
-		for (TodoItem item: l.getList()) {
-			String category = item.getCategory();
-			if(category.contains(keyword) == true) {
-				int current_num = l.indexOf(item) + 1;
-				list(current_num, item);
-				count++;
-			}
+		for (TodoItem item: l.getListCategory(cate)) {
+			System.out.println(item.toString());
+			count++;
 		}
 		System.out.println("Found total of " + count + " items matching");
 	}
 	
 	public static void listAll(TodoList l) {
-		int total_num = l.getSize();
-		System.out.println("<Total List, total " + total_num + ">");
+		System.out.println("<Total List, total " + l.getCount() + ">");
 		for (TodoItem item : l.getList()) {
-			int current_num = l.indexOf(item) + 1;
-			list(current_num, item);
+			System.out.println(item.toString());
 		}
 	}
 	
-	public static void list(int current_num, TodoItem item) {
-		System.out.println(current_num + ". [" + item.getCategory() + "] " + item.getTitle() + " - " 
-				+ item.getDesc() + " -" + item.getDue_date() + " -Time written: " + item.getCurrent_date());
+	public static void listAll(TodoList l, String orderby, int ordering) {
+		System.out.printf("<Total List, toal %d>\n", l.getCount());
+		for (TodoItem item : l.getOrderedList(orderby, ordering)){
+			System.out.println(item.toString());
+		}
 	}
 	
-	public static void listCate(TodoList l) {
-		HashSet<String> set = new HashSet();
-		for (TodoItem item : l.getList()) {
-			String category = item.getCategory();
-			set.add(category);
-		}
-		
-		Iterator iter = set.iterator();
+	public static void listCateAll(TodoList l) {
 		int count = 0;
-		while(iter.hasNext()) {
-		    System.out.print(iter.next());
-		    if (iter.hasNext() == true) {
-		    	System.out.print(" / ");
-		    }
-		    count++;
+		for (String item : l.getCategories()) {
+			System.out.print(item + " ");
+			count++;
 		}
 		
 		System.out.println("\nFound total of " + count + " categories");
 	}
 	
-	public static void loadList(TodoList l, String string) {
-		// TODO Auto-generated method stub
-		try {
-			BufferedReader br = new BufferedReader(new FileReader(string));
-			
-			String inputline;
-			int count = 0;
-			while((inputline = br.readLine()) != null) {
-				StringTokenizer st = new StringTokenizer(inputline, "##");
-				String title = st.nextToken();
-				String category = st.nextToken();
-				String desc = st.nextToken();
-				String due_date = st.nextToken();
-				String current_date = st.nextToken();
-			
-				TodoItem t = new TodoItem(title, category, desc, due_date);
-				t.setCurrent_date(current_date);
-				l.addItem(t);
-				count = count + 1;
-			}
-			
-			
-			br.close();
-			System.out.println("Read " + count + " items from the file\n");
-			
-		} catch (FileNotFoundException e) {
-			System.out.println(string +" does not exist");
-		} catch (IOException e) {
-			e.printStackTrace();
+	public static void completeItem(TodoList l, int id) {
+		if(l.completeItem(id) > 0) {
+			System.out.println("Task finish checked");
 		}
 		
 	}
-
+	
 	public static void saveList(TodoList l, String string) {
 		try {
 			Writer w = new FileWriter(string);
@@ -207,5 +146,5 @@ public class TodoUtil {
 			e.printStackTrace();
 		}
 	}
-	
+
 }
